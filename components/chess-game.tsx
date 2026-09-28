@@ -223,9 +223,9 @@ export default function ChessGame() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl">
+    <div className="flex w-full max-w-6xl flex-col gap-6 md:flex-row">
       <div className="flex-1 flex flex-col items-center">
-        <div className={`mb-3 w-full max-w-[min(90vw,640px)] text-center font-mono text-lg font-semibold tabular-nums ${currentPlayer === PieceColor.BLACK && gameStatus !== "not-started" ? "text-foreground" : "text-muted-foreground"}`}>
+        <div className={`mb-3 w-full max-w-[640px] text-center font-mono text-lg font-semibold tabular-nums ${currentPlayer === PieceColor.BLACK && gameStatus !== "not-started" ? "text-foreground" : "text-muted-foreground"}`}>
           Black: {formatTime(timeLeft[PieceColor.BLACK])}
         </div>
         <ChessBoard
@@ -234,7 +234,7 @@ export default function ChessGame() {
           validMoves={validMoves}
           onSquareClick={handleSquareClick}
         />
-        <div className={`mt-3 w-full max-w-[min(90vw,640px)] text-center font-mono text-lg font-semibold tabular-nums ${currentPlayer === PieceColor.WHITE && gameStatus !== "not-started" ? "text-foreground" : "text-muted-foreground"}`}>
+        <div className={`mt-3 w-full max-w-[640px] text-center font-mono text-lg font-semibold tabular-nums ${currentPlayer === PieceColor.WHITE && gameStatus !== "not-started" ? "text-foreground" : "text-muted-foreground"}`}>
           White: {formatTime(timeLeft[PieceColor.WHITE])}
         </div>
         <GameControls onStart={startGame} gameStatus={gameStatus} />
