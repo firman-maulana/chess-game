@@ -12,7 +12,7 @@ export default function ChessGame() {
   const [currentPlayer, setCurrentPlayer] = useState<PieceColor>(PieceColor.WHITE)
   const [selectedPiece, setSelectedPiece] = useState<Position | null>(null)
   const [validMoves, setValidMoves] = useState<Position[]>([])
-  const [gameStatus, setGameStatus] = useState<string>("ongoing")
+  const [gameStatus, setGameStatus] = useState<string>("not-started")
   const [timeLeft, setTimeLeft] = useState({
     [PieceColor.WHITE]: 10 * 60,
     [PieceColor.BLACK]: 10 * 60,
@@ -63,6 +63,8 @@ export default function ChessGame() {
 
   // Check for check, checkmate, or stalemate after each move
   useEffect(() => {
+    if (gameStatus === "not-started" || gameStatus.startsWith("timeout-")) return
+
     if (isCheckmate(board, currentPlayer)) {
       const winner = currentPlayer === PieceColor.WHITE ? "Black" : "White"
       setGameStatus(`checkmate-${winner}`)
@@ -77,7 +79,7 @@ export default function ChessGame() {
 
   const handleSquareClick = (position: Position) => {
     // If game is over, don't allow further moves
-    if (gameStatus.includes("checkmate") || gameStatus === "stalemate" || gameStatus.startsWith("timeout-")) {
+    if (gameStatus === "not-started" || gameStatus.includes("checkmate") || gameStatus === "stalemate" || gameStatus.startsWith("timeout-")) {
       return
     }
 
@@ -132,12 +134,19 @@ export default function ChessGame() {
     }
   }
 
+  const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`
+
+  const startGame = () => {
+    resetGame()
+    setGameStatus("ongoing")
+  }
+
   const resetGame = () => {
     setBoard(initialBoardState())
     setCurrentPlayer(PieceColor.WHITE)
     setSelectedPiece(null)
     setValidMoves([])
-    setGameStatus("ongoing")
+    setGameStatus("not-started")
     setTimeLeft({
       [PieceColor.WHITE]: 10 * 60,
       [PieceColor.BLACK]: 10 * 60,
@@ -152,19 +161,24 @@ export default function ChessGame() {
   return (
     <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl">
       <div className="flex-1 flex flex-col items-center">
+        <div className={`mb-3 w-full max-w-[min(90vw,640px)] text-center font-mono text-lg font-semibold tabular-nums ${currentPlayer === PieceColor.BLACK && gameStatus !== "not-started" ? "text-foreground" : "text-muted-foreground"}`}>
+          Black: {formatTime(timeLeft[PieceColor.BLACK])}
+        </div>
         <ChessBoard
           board={board}
           selectedPiece={selectedPiece}
           validMoves={validMoves}
           onSquareClick={handleSquareClick}
         />
-        <GameControls onReset={resetGame} gameStatus={gameStatus} />
+        <div className={`mt-3 w-full max-w-[min(90vw,640px)] text-center font-mono text-lg font-semibold tabular-nums ${currentPlayer === PieceColor.WHITE && gameStatus !== "not-started" ? "text-foreground" : "text-muted-foreground"}`}>
+          White: {formatTime(timeLeft[PieceColor.WHITE])}
+        </div>
+        <GameControls onStart={startGame} gameStatus={gameStatus} />
       </div>
       <div className="flex-1">
         <GameInfo
           currentPlayer={currentPlayer}
           gameStatus={gameStatus}
-          timeLeft={timeLeft}
           moveHistory={moveHistory}
           capturedPieces={capturedPieces}
         />

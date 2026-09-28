@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 interface GameInfoProps {
   currentPlayer: PieceColor
   gameStatus: string
-  timeLeft: { [PieceColor.WHITE]: number; [PieceColor.BLACK]: number }
   moveHistory: string[]
   capturedPieces: {
     [PieceColor.WHITE]: ChessPiece[]
@@ -16,32 +15,12 @@ interface GameInfoProps {
   }
 }
 
-export default function GameInfo({ currentPlayer, gameStatus, timeLeft, moveHistory, capturedPieces }: GameInfoProps) {
-  const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`
+export default function GameInfo({ currentPlayer, gameStatus, moveHistory, capturedPieces }: GameInfoProps) {
   const timedOut = gameStatus.startsWith("timeout-")
   const winner = timedOut ? gameStatus.split("-")[1] : null
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        {[PieceColor.WHITE, PieceColor.BLACK].map((color) => {
-          const isActive = currentPlayer === color && !timedOut
-          const isExpired = timeLeft[color] === 0
-          return (
-            <Card key={color} className={isActive ? "ring-2 ring-primary" : ""}>
-              <CardContent className="p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {color === PieceColor.WHITE ? "White" : "Black"}
-                </p>
-                <p className={`mt-1 font-mono text-2xl font-bold tabular-nums ${isExpired ? "text-destructive" : ""}`}>
-                  {formatTime(timeLeft[color])}
-                </p>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-
       <Card>
         <CardHeader className="pb-2">
           <CardTitle>{timedOut ? `${winner} menang berdasarkan waktu` : "Game Status"}</CardTitle>

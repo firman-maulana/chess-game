@@ -4,16 +4,19 @@ import { Button } from "@/components/ui/button"
 import { RefreshCw } from "lucide-react"
 
 interface GameControlsProps {
-  onReset: () => void
+  onStart: () => void
   gameStatus: string
 }
 
-export default function GameControls({ onReset, gameStatus }: GameControlsProps) {
+export default function GameControls({ onStart, gameStatus }: GameControlsProps) {
+  const isFinished = gameStatus === "stalemate" || gameStatus.includes("checkmate") || gameStatus.startsWith("timeout-")
+  const isStarted = gameStatus !== "not-started" && !isFinished
+
   return (
     <div className="mt-4 flex flex-col items-center gap-4">
-      <Button onClick={onReset} className="flex items-center gap-2">
+      <Button onClick={onStart} className="flex items-center gap-2">
         <RefreshCw className="h-4 w-4" />
-        New Game
+        {isStarted ? "New Game" : "Start Game"}
       </Button>
 
       {gameStatus.includes("checkmate") && (
