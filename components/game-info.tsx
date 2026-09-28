@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 interface GameInfoProps {
   currentPlayer: PieceColor
   gameStatus: string
+  timeLeft: { [PieceColor.WHITE]: number; [PieceColor.BLACK]: number }
   moveHistory: string[]
   capturedPieces: {
     [PieceColor.WHITE]: ChessPiece[]
@@ -15,12 +16,35 @@ interface GameInfoProps {
   }
 }
 
-export default function GameInfo({ currentPlayer, gameStatus, moveHistory, capturedPieces }: GameInfoProps) {
+export default function GameInfo({ currentPlayer, gameStatus, timeLeft, moveHistory, capturedPieces }: GameInfoProps) {
+  const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`
+  const timedOut = gameStatus.startsWith("timeout-")
+  const winner = timedOut ? gameStatus.split("-")[1] : null
+
   return (
     <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        {[PieceColor.WHITE, PieceColor.BLACK].map((color) => {
+          const isActive = currentPlayer === color && !timedOut
+          const isExpired = timeLeft[color] === 0
+          return (
+            <Card key={color} className={isActive ? "ring-2 ring-primary" : ""}>
+              <CardContent className="p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {color === PieceColor.WHITE ? "White" : "Black"}
+                </p>
+                <p className={`mt-1 font-mono text-2xl font-bold tabular-nums ${isExpired ? "text-destructive" : ""}`}>
+                  {formatTime(timeLeft[color])}
+                </p>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle>Game Status</CardTitle>
+          <CardTitle>{timedOut ? `${winner} menang berdasarkan waktu` : "Game Status"}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2 mb-2">
@@ -30,7 +54,9 @@ export default function GameInfo({ currentPlayer, gameStatus, moveHistory, captu
             <span className="font-medium">{currentPlayer === PieceColor.WHITE ? "White" : "Black"}'s turn</span>
           </div>
 
-          {gameStatus === "ongoing" ? (
+          {timedOut ? (
+            <p className="text-sm font-semibold text-green-600">Waktu {currentPlayer === PieceColor.WHITE ? "White" : "Black"} habis. {winner} menang!</p>
+          ) : gameStatus === "ongoing" ? (
             <p className="text-sm text-gray-500">Game in progress</p>
           ) : gameStatus.includes("check") && !gameStatus.includes("checkmate") ? (
             <p className="text-sm text-orange-600 font-semibold">

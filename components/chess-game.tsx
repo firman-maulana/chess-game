@@ -13,6 +13,10 @@ export default function ChessGame() {
   const [selectedPiece, setSelectedPiece] = useState<Position | null>(null)
   const [validMoves, setValidMoves] = useState<Position[]>([])
   const [gameStatus, setGameStatus] = useState<string>("ongoing")
+  const [timeLeft, setTimeLeft] = useState({
+    [PieceColor.WHITE]: 10 * 60,
+    [PieceColor.BLACK]: 10 * 60,
+  })
   const [moveHistory, setMoveHistory] = useState<string[]>([])
   const [capturedPieces, setCapturedPieces] = useState<{
     [PieceColor.WHITE]: ChessPiece[]
@@ -39,6 +43,24 @@ export default function ChessGame() {
     }
   }, [selectedPiece, board, currentPlayer])
 
+  // Only the active player's clock runs. The interval is cleared on every turn change.
+  useEffect(() => {
+    if (gameStatus !== "ongoing" && !gameStatus.startsWith("check-")) return
+
+    const timer = window.setInterval(() => {
+      setTimeLeft((prev) => {
+        const remaining = prev[currentPlayer]
+        if (remaining <= 1) {
+          setGameStatus(`timeout-${currentPlayer === PieceColor.WHITE ? "Black" : "White"}`)
+          return { ...prev, [currentPlayer]: 0 }
+        }
+        return { ...prev, [currentPlayer]: remaining - 1 }
+      })
+    }, 1000)
+
+    return () => window.clearInterval(timer)
+  }, [currentPlayer, gameStatus])
+
   // Check for check, checkmate, or stalemate after each move
   useEffect(() => {
     if (isCheckmate(board, currentPlayer)) {
@@ -55,7 +77,7 @@ export default function ChessGame() {
 
   const handleSquareClick = (position: Position) => {
     // If game is over, don't allow further moves
-    if (gameStatus.includes("checkmate") || gameStatus === "stalemate") {
+    if (gameStatus.includes("checkmate") || gameStatus === "stalemate" || gameStatus.startsWith("timeout-")) {
       return
     }
 
@@ -116,6 +138,10 @@ export default function ChessGame() {
     setSelectedPiece(null)
     setValidMoves([])
     setGameStatus("ongoing")
+    setTimeLeft({
+      [PieceColor.WHITE]: 10 * 60,
+      [PieceColor.BLACK]: 10 * 60,
+    })
     setMoveHistory([])
     setCapturedPieces({
       [PieceColor.WHITE]: [],
@@ -138,6 +164,7 @@ export default function ChessGame() {
         <GameInfo
           currentPlayer={currentPlayer}
           gameStatus={gameStatus}
+          timeLeft={timeLeft}
           moveHistory={moveHistory}
           capturedPieces={capturedPieces}
         />
