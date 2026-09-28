@@ -14,6 +14,7 @@ export default function ChessGame() {
   const [validMoves, setValidMoves] = useState<Position[]>([])
   const [gameStatus, setGameStatus] = useState<string>("not-started")
   const [gameMode, setGameMode] = useState<"multiplayer" | "singleplayer">("multiplayer")
+  const [isBotThinking, setIsBotThinking] = useState(false)
   const [timeLeft, setTimeLeft] = useState({
     [PieceColor.WHITE]: 10 * 60,
     [PieceColor.BLACK]: 10 * 60,
@@ -137,9 +138,13 @@ export default function ChessGame() {
 
   // Medium bot: it considers every legal move, prioritizes captures, then chooses among the best candidates.
   useEffect(() => {
-    if (gameMode !== "singleplayer" || currentPlayer !== PieceColor.BLACK) return
+    if (gameMode !== "singleplayer" || currentPlayer !== PieceColor.BLACK) {
+      setIsBotThinking(false)
+      return
+    }
     if (gameStatus !== "ongoing" && !gameStatus.startsWith("check-")) return
 
+    setIsBotThinking(true)
     const botTimer = window.setTimeout(() => {
       const moves: { from: Position; to: Position; captured: ChessPiece | null }[] = []
       for (let row = 0; row < 8; row++) {
@@ -157,7 +162,10 @@ export default function ChessGame() {
         }
       }
 
-      if (moves.length === 0) return
+      if (moves.length === 0) {
+        setIsBotThinking(false)
+        return
+      }
       const captureMoves = moves.filter((move) => move.captured)
       const candidates = captureMoves.length > 0 ? captureMoves : moves
       const chosen = candidates[Math.floor(Math.random() * candidates.length)]
@@ -177,9 +185,13 @@ export default function ChessGame() {
       setMoveHistory((prev) => [...prev, `${pieceSymbol}${fromNotation}-${toNotation}`])
       setBoard(result.newBoard)
       setCurrentPlayer(PieceColor.WHITE)
-    }, 500)
+      setIsBotThinking(false)
+    }, 2200)
 
-    return () => window.clearTimeout(botTimer)
+    return () => {
+      window.clearTimeout(botTimer)
+      setIsBotThinking(false)
+    }
   }, [gameMode, currentPlayer, gameStatus, board])
 
   const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`
@@ -197,6 +209,7 @@ export default function ChessGame() {
     setCurrentPlayer(PieceColor.WHITE)
     setSelectedPiece(null)
     setValidMoves([])
+    setIsBotThinking(false)
     setGameStatus("not-started")
     setTimeLeft({
       [PieceColor.WHITE]: 10 * 60,
@@ -235,6 +248,7 @@ export default function ChessGame() {
             resetGame()
             setGameMode(mode)
           }}
+          isBotThinking={isBotThinking}
           moveHistory={moveHistory}
           capturedPieces={capturedPieces}
         />

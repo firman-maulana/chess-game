@@ -10,6 +10,7 @@ interface GameInfoProps {
   gameStatus: string
   gameMode: "multiplayer" | "singleplayer"
   onGameModeChange: (mode: "multiplayer" | "singleplayer") => void
+  isBotThinking?: boolean
   moveHistory: string[]
   capturedPieces: {
     [PieceColor.WHITE]: ChessPiece[]
@@ -17,24 +18,29 @@ interface GameInfoProps {
   }
 }
 
-export default function GameInfo({ currentPlayer, gameStatus, gameMode, onGameModeChange, moveHistory, capturedPieces }: GameInfoProps) {
+export default function GameInfo({ currentPlayer, gameStatus, gameMode, onGameModeChange, isBotThinking = false, moveHistory, capturedPieces }: GameInfoProps) {
   const timedOut = gameStatus.startsWith("timeout-")
   const winner = timedOut ? gameStatus.split("-")[1] : null
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <label htmlFor="game-mode" className="text-sm font-medium">Game Mode</label>
-        <select
-          id="game-mode"
-          value={gameMode}
-          onChange={(event) => onGameModeChange(event.target.value as "multiplayer" | "singleplayer")}
-          disabled={gameStatus !== "not-started" && !gameStatus.includes("checkmate") && gameStatus !== "stalemate" && !gameStatus.startsWith("timeout-")}
-          className="rounded-md border bg-background px-3 py-2 text-sm"
-        >
-          <option value="multiplayer">Multiplayer</option>
-          <option value="singleplayer">Singleplayer</option>
-        </select>
+      <div className="space-y-2">
+        <label htmlFor="game-mode" className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          Game Mode
+        </label>
+        <div className="relative">
+          <select
+            id="game-mode"
+            value={gameMode}
+            onChange={(event) => onGameModeChange(event.target.value as "multiplayer" | "singleplayer")}
+            disabled={gameStatus !== "not-started" && !gameStatus.includes("checkmate") && gameStatus !== "stalemate" && !gameStatus.startsWith("timeout-")}
+            className="w-full appearance-none rounded-lg border border-border/80 bg-background px-3 py-2.5 pr-10 text-sm font-medium shadow-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <option value="multiplayer">Multiplayer</option>
+            <option value="singleplayer">Singleplayer · Medium bot</option>
+          </select>
+          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-muted-foreground">⌄</span>
+        </div>
       </div>
       <Card>
         <CardHeader className="pb-2">
@@ -48,7 +54,9 @@ export default function GameInfo({ currentPlayer, gameStatus, gameMode, onGameMo
             <span className="font-medium">{currentPlayer === PieceColor.WHITE ? "White" : "Black"}'s turn</span>
           </div>
 
-          {timedOut ? (
+          {isBotThinking ? (
+            <p className="text-sm font-medium text-muted-foreground">Black sedang berpikir...</p>
+          ) : timedOut ? (
             <p className="text-sm font-semibold text-green-600">Waktu {currentPlayer === PieceColor.WHITE ? "White" : "Black"} habis. {winner} menang!</p>
           ) : gameStatus === "ongoing" ? (
             <p className="text-sm text-gray-500">Game in progress</p>

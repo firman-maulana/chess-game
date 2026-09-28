@@ -93,8 +93,9 @@ export function makeMove(board: (ChessPiece | null)[][], from: Position, to: Pos
     newBoard[from.row][newRookCol] = newBoard[from.row][rookCol]
     newBoard[from.row][rookCol] = null
 
-    if (newBoard[from.row][newRookCol]) {
-      newBoard[from.row][newRookCol].hasMoved = true
+    const movedRook = newBoard[from.row][newRookCol]
+    if (movedRook) {
+      movedRook.hasMoved = true
     }
   }
 

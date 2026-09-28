@@ -26,8 +26,8 @@ export default function ChessBoard({ board, selectedPiece, validMoves, onSquareC
   const rowLabels = Array.from({ length: 8 }, (_, i) => 8 - i)
 
   return (
-    <div className="relative">
-      <div className="grid grid-cols-[auto_repeat(8,1fr)] grid-rows-[repeat(8,1fr)_auto]">
+    <div className="relative w-full max-w-[min(92vw,640px)] overflow-hidden px-1 sm:px-2">
+      <div className="grid w-full grid-cols-[clamp(1.25rem,5vw,1.75rem)_repeat(8,minmax(0,1fr))] grid-rows-[clamp(1.25rem,5vw,1.75rem)_repeat(8,minmax(0,1fr))_clamp(1.25rem,5vw,1.75rem)] aspect-square">
         {/* Empty top-left corner */}
         <div className="w-6"></div>
 
