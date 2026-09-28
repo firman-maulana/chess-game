@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 interface GameInfoProps {
   currentPlayer: PieceColor
   gameStatus: string
+  gameMode: "multiplayer" | "singleplayer"
+  onGameModeChange: (mode: "multiplayer" | "singleplayer") => void
   moveHistory: string[]
   capturedPieces: {
     [PieceColor.WHITE]: ChessPiece[]
@@ -15,12 +17,25 @@ interface GameInfoProps {
   }
 }
 
-export default function GameInfo({ currentPlayer, gameStatus, moveHistory, capturedPieces }: GameInfoProps) {
+export default function GameInfo({ currentPlayer, gameStatus, gameMode, onGameModeChange, moveHistory, capturedPieces }: GameInfoProps) {
   const timedOut = gameStatus.startsWith("timeout-")
   const winner = timedOut ? gameStatus.split("-")[1] : null
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <label htmlFor="game-mode" className="text-sm font-medium">Game Mode</label>
+        <select
+          id="game-mode"
+          value={gameMode}
+          onChange={(event) => onGameModeChange(event.target.value as "multiplayer" | "singleplayer")}
+          disabled={gameStatus !== "not-started" && !gameStatus.includes("checkmate") && gameStatus !== "stalemate" && !gameStatus.startsWith("timeout-")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="multiplayer">Multiplayer</option>
+          <option value="singleplayer">Singleplayer</option>
+        </select>
+      </div>
       <Card>
         <CardHeader className="pb-2">
           <CardTitle>{timedOut ? `${winner} menang berdasarkan waktu` : "Game Status"}</CardTitle>

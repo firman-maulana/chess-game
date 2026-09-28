@@ -13,6 +13,7 @@ export default function ChessGame() {
   const [selectedPiece, setSelectedPiece] = useState<Position | null>(null)
   const [validMoves, setValidMoves] = useState<Position[]>([])
   const [gameStatus, setGameStatus] = useState<string>("not-started")
+  const [gameMode, setGameMode] = useState<"multiplayer" | "singleplayer">("multiplayer")
   const [timeLeft, setTimeLeft] = useState({
     [PieceColor.WHITE]: 10 * 60,
     [PieceColor.BLACK]: 10 * 60,
@@ -134,11 +135,61 @@ export default function ChessGame() {
     }
   }
 
+  // Medium bot: it considers every legal move, prioritizes captures, then chooses among the best candidates.
+  useEffect(() => {
+    if (gameMode !== "singleplayer" || currentPlayer !== PieceColor.BLACK) return
+    if (gameStatus !== "ongoing" && !gameStatus.startsWith("check-")) return
+
+    const botTimer = window.setTimeout(() => {
+      const moves: { from: Position; to: Position; captured: ChessPiece | null }[] = []
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+          const piece = board[row][col]
+          if (!piece || piece.color !== PieceColor.BLACK) continue
+          for (let targetRow = 0; targetRow < 8; targetRow++) {
+            for (let targetCol = 0; targetCol < 8; targetCol++) {
+              const to = { row: targetRow, col: targetCol }
+              if (isValidMove(board, { row, col }, to, PieceColor.BLACK)) {
+                moves.push({ from: { row, col }, to, captured: board[targetRow][targetCol] })
+              }
+            }
+          }
+        }
+      }
+
+      if (moves.length === 0) return
+      const captureMoves = moves.filter((move) => move.captured)
+      const candidates = captureMoves.length > 0 ? captureMoves : moves
+      const chosen = candidates[Math.floor(Math.random() * candidates.length)]
+      const result = makeMove(board, chosen.from, chosen.to)
+      const fromNotation = `${String.fromCharCode(97 + chosen.from.col)}${8 - chosen.from.row}`
+      const toNotation = `${String.fromCharCode(97 + chosen.to.col)}${8 - chosen.to.row}`
+      const pieceSymbol = board[chosen.from.row][chosen.from.col]?.type === PieceType.PAWN
+        ? ""
+        : board[chosen.from.row][chosen.from.col]?.type.charAt(0)
+
+      if (chosen.captured) {
+        setCapturedPieces((prev) => ({
+          ...prev,
+          [PieceColor.BLACK]: [...prev[PieceColor.BLACK], chosen.captured as ChessPiece],
+        }))
+      }
+      setMoveHistory((prev) => [...prev, `${pieceSymbol}${fromNotation}-${toNotation}`])
+      setBoard(result.newBoard)
+      setCurrentPlayer(PieceColor.WHITE)
+    }, 500)
+
+    return () => window.clearTimeout(botTimer)
+  }, [gameMode, currentPlayer, gameStatus, board])
+
   const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`
 
   const startGame = () => {
+    if (gameStatus === "not-started") {
+      setGameStatus("ongoing")
+      return
+    }
     resetGame()
-    setGameStatus("ongoing")
   }
 
   const resetGame = () => {
@@ -179,6 +230,11 @@ export default function ChessGame() {
         <GameInfo
           currentPlayer={currentPlayer}
           gameStatus={gameStatus}
+          gameMode={gameMode}
+          onGameModeChange={(mode) => {
+            resetGame()
+            setGameMode(mode)
+          }}
           moveHistory={moveHistory}
           capturedPieces={capturedPieces}
         />
